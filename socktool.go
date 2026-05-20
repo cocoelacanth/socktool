@@ -1,0 +1,233 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"time"
+
+	tea "charm.land/bubbletea/v2"
+	gloss "charm.land/lipgloss/v2"
+	aic "github.com/TheZoraiz/ascii-image-converter/aic_package"
+)
+
+type Image struct {
+	Frames []string
+	Delay *int
+	Loop *int
+}
+
+type model struct {
+	imgs map[string]Image
+	curImg *Image
+	ascii string
+	frame int
+	width int
+	height int
+	animID int
+}
+
+type AsciiGetMsg string
+
+type TickMsg struct{
+	ID int
+}
+
+func (m model) getAsciiCmd() tea.Cmd {
+	return func() tea.Msg {
+		return AsciiGetMsg(m.getAscii())
+	}
+}
+
+func tickCmd(d time.Duration, id int) tea.Cmd {
+	return tea.Tick(time.Millisecond*d, func(t time.Time) tea.Msg {
+		return TickMsg{ID: id}
+	})
+}
+
+func getExeDir() (string, error) {
+	exePath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Dir(exePath), nil
+}
+
+func getImgs() (map[string]Image, error) {
+	exeDir, err := getExeDir()
+	if err != nil {
+		return nil, err
+	}
+	jsonPath := filepath.Join(exeDir, "images.json")
+
+	jsonFile, err := os.Open(jsonPath)
+	if err != nil {
+		return nil, err
+	}
+	defer jsonFile.Close()
+
+	var imgs map[string]Image
+
+	decoder := json.NewDecoder(jsonFile)
+	if err := decoder.Decode(&imgs); err != nil {
+		return nil, err
+	}
+
+	for key, img := range imgs {
+		if (img.Loop == nil) {
+			img.Loop = img.Delay
+			imgs[key] = img
+		}
+	}
+
+	return imgs, nil
+}
+
+func initialModel() model {
+	imgs, err := getImgs()
+	if err != nil {
+		return model{}
+	}
+	return model{imgs: imgs}
+}
+
+func (m model) menuView() string {
+	var imgs []string
+	for key, img := range m.imgs {
+		imgs = append(imgs, fmt.Sprintf("%s - %s", key, img.Frames[0]))
+	}
+	sort.Strings(imgs)
+	list := strings.Join(imgs, "\n")
+
+	logo :=
+` Press a keybind to display an image.
+                _    _              _
+ ___  ___   ___| | _| |_ ___   ___ | |
+/ __|/ _ \ / __| |/ / __/ _ \ / _ \| |
+\__ \ (_) | (__|   <| || (_) | (_) | |
+|___/\___/ \___|_|\_\\__\___/ \___/|_|
+
+    Press Esc at any time to exit.`
+
+	list = gloss.Place(
+		m.width,
+		m.height,
+		gloss.Left,
+		gloss.Top,
+		list,
+	)
+    logo = gloss.Place(
+   		38,
+    	8,
+      	gloss.Center,
+       	gloss.Center,
+        logo,
+    )
+
+	a := gloss.NewLayer(list).X(0).Y(0)
+	b := gloss.NewLayer(logo).X((m.width-38)/2).Y((m.height-8)/2)
+
+	return gloss.NewCompositor(a, b).Render()
+}
+
+func (m model) asciiView() string {
+	return gloss.Place(
+		m.width,
+		m.height,
+		gloss.Center,
+		gloss.Center,
+		m.ascii,
+	)
+}
+
+func (m model) getAscii() string {
+	exeDir, err := getExeDir()
+	if err != nil {
+		return "Error: could not get executable folder"
+	}
+	imgPath := filepath.Join(exeDir, "img", m.curImg.Frames[m.frame])
+
+	flags := aic.DefaultFlags()
+
+	ascii, err := aic.Convert(imgPath, flags)
+	if err != nil {
+		return fmt.Sprintf("Error: could not convert %s to ASCII", imgPath)
+	}
+
+	return ascii
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+		case tea.WindowSizeMsg:
+			m.width = msg.Width
+			m.height = msg.Height
+
+		case tea.KeyPressMsg:
+			switch msg.String() {
+				case "ctrl+c", "esc":
+					return m, tea.Quit
+				default:
+					img, ok := m.imgs[msg.String()]
+					if ok {
+						m.curImg = &img
+						m.frame = 0
+						m.animID++
+						return m, m.getAsciiCmd()
+					}
+					return m, nil
+			}
+
+		case AsciiGetMsg:
+			m.ascii = string(msg)
+			if m.curImg.Delay != nil {
+				if (m.frame == len(m.curImg.Frames)-1) {
+					return m, tickCmd(time.Duration(*m.curImg.Loop), m.animID)
+				}
+				return m, tickCmd(time.Duration(*m.curImg.Delay), m.animID)
+			}
+
+		case TickMsg:
+			if m.curImg == nil || msg.ID != m.animID {
+				return m, nil
+			}
+			m.frame++
+			if (m.frame >= len(m.curImg.Frames)) {
+				m.frame = 0
+			}
+			return m, m.getAsciiCmd()
+	}
+
+	return m, nil
+}
+
+func (m model) View() tea.View {
+	var canvas string
+	if m.curImg == nil {
+		canvas = m.menuView()
+	} else {
+		canvas = m.asciiView()
+	}
+
+    v := tea.NewView(canvas)
+    v.AltScreen = true
+	return v
+}
+
+func main() {
+	m := initialModel();
+	p := tea.NewProgram(m)
+	if _, err := p.Run(); err != nil {
+		log.Printf("Fatal error: %v", err)
+		os.Exit(1)
+	}
+}
