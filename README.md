@@ -56,3 +56,18 @@ looping image sequences are supported, but animated gifs are not.
   * omit to disable animation
 * `"loop"` - millisecond pause between loops
   * defaults to `"delay"` value
+
+## licenses
+this project is licensed under the GNU GPLv3. see LICENSE for details.
+
+### third-party
+this project includes software from:
+
+* [https://github.com/charmbracelet/bubbletea](https://github.com/charmbracelet/bubbletea)
+  * licensed under the MIT License
+* [https://github.com/charmbracelet/lipgloss](https://github.com/charmbracelet/lipgloss)
+  * licensed under the MIT License
+* [https://github.com/TheZoraiz/ascii-image-converter](https://github.com/TheZoraiz/ascii-image-converter)
+  * licensed under the Apache License 2.0
+
+see LICENSES/ for details.
