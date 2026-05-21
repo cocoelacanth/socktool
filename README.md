@@ -4,17 +4,42 @@ a tool to create keybinds for ascii art images
 > [!NOTE]
 > this tool is still unfinished and in development. it is functional, but not particularly portable and likely not yet fit for general use.
 
-## building
-ensure you have go (>=1.26.3) installed, then:
+## requirements
+ensure you have go (>=1.26.3) installed. other than that, there are no external dependencies to install.
 
+## installing
+to install socktool as a binary to your `GOPATH`, run:
 ```sh
+go install github.com/cocoelacanth/socktool@latest
+```
+
+## building
+to build the socktool binary, run:
+```sh
+git clone https://github.com/cocoelacanth/socktool
+cd socktool
 mkdir -p bin
 go build -o ./bin .
 ```
 
 ## usage
-  1. put your images in bin/img/
-  2. add an entry for each image/animation in bin/images.json
+```sh
+$ socktool -h
+```
+```
+Usage of socktool:
+  -chars string
+    	a custom set of characters use in the ASCII art
+  -color
+    	whether the ASCII art should have color
+  -imgs string
+    	(required) the location to search for image files
+  -json string
+    	(required) the JSON file containing images
+```
+
+  1. create a folder with all your images
+  2. create a json file with entries for each image/animation
   3. run socktool
   4. press a keybind to display an image!
 
@@ -27,25 +52,23 @@ go build -o ./bin .
 
 looping image sequences are supported, but animated gifs are not.
 
-### images.json format
+### json format
 
-#### example: still image
+#### example
 ```json
-"q": {
-  "frames": ["foo.png"]
-}
-```
-
-#### example: animation
-```json
-"w": {
-  "frames": [
-    "bar/frame_1.png",
-    "bar/frame_2.png",
-    "bar/frame_3.png"
-  ],
-  "delay": 100,
-  "loop": 1000
+{
+  "q": {
+    "frames": ["foo.png"]
+  },
+  "w": {
+    "frames": [
+      "bar/frame_1.png",
+      "bar/frame_2.png",
+      "bar/frame_3.png"
+    ],
+    "delay": 100,
+    "loop": 1000
+  }
 }
 ```
 
@@ -55,7 +78,7 @@ looping image sequences are supported, but animated gifs are not.
 * `"delay"` - millisecond gap between frames (`100` = 0.1s = 10 FPS)
   * omit to disable animation
 * `"loop"` - millisecond pause between loops
-  * defaults to `"delay"` value
+  * omit to use `"delay"` value
 
 ## licenses
 this project is licensed under the GNU GPLv3. see LICENSE for details.
