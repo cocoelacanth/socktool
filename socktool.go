@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -15,6 +17,13 @@ import (
 	aic "github.com/TheZoraiz/ascii-image-converter/aic_package"
 )
 
+type cliFlags struct {
+	jsonPath string
+	imgDir string
+	color bool
+	charset string
+}
+
 type Image struct {
 	Frames []string
 	Delay *int
@@ -22,6 +31,7 @@ type Image struct {
 }
 
 type model struct {
+	flags cliFlags
 	imgs map[string]Image
 	curImg *Image
 	ascii string
@@ -58,14 +68,31 @@ func getExeDir() (string, error) {
 	return filepath.Dir(exePath), nil
 }
 
-func getImgs() (map[string]Image, error) {
-	exeDir, err := getExeDir()
-	if err != nil {
-		return nil, err
-	}
-	jsonPath := filepath.Join(exeDir, "images.json")
+func initialModel() (model, error) {
+	var m model
 
-	jsonFile, err := os.Open(jsonPath)
+	flag.StringVar(&m.flags.jsonPath, "json", "", "(required) the JSON file containing images")
+	flag.StringVar(&m.flags.imgDir, "imgs", "", "(required) the location to search for image files")
+	flag.BoolVar(&m.flags.color, "color", false, "whether the ASCII art should have color")
+	flag.StringVar(&m.flags.charset, "chars", "", "a custom set of characters use in the ASCII art")
+
+	flag.Parse()
+	if m.flags.jsonPath == "" {
+		return m, errors.New("-json")
+	}
+	if m.flags.imgDir == "" {
+		return m, errors.New("-imgs")
+	}
+
+	if imgs, err := m.getImgs(); err == nil {
+		m.imgs = imgs
+	}
+
+	return m, nil
+}
+
+func (m model) getImgs() (map[string]Image, error) {
+	jsonFile, err := os.Open(m.flags.jsonPath)
 	if err != nil {
 		return nil, err
 	}
@@ -86,14 +113,6 @@ func getImgs() (map[string]Image, error) {
 	}
 
 	return imgs, nil
-}
-
-func initialModel() model {
-	imgs, err := getImgs()
-	if err != nil {
-		return model{}
-	}
-	return model{imgs: imgs}
 }
 
 func (m model) menuView() string {
@@ -146,13 +165,13 @@ func (m model) asciiView() string {
 }
 
 func (m model) getAscii() string {
-	exeDir, err := getExeDir()
-	if err != nil {
-		return "Error: could not get executable folder"
-	}
-	imgPath := filepath.Join(exeDir, "img", m.curImg.Frames[m.frame])
+	imgPath := filepath.Join(m.flags.imgDir, m.curImg.Frames[m.frame])
 
 	flags := aic.DefaultFlags()
+	flags.Colored = m.flags.color
+	if m.flags.charset != "" {
+		flags.CustomMap = m.flags.charset
+	}
 
 	ascii, err := aic.Convert(imgPath, flags)
 	if err != nil {
@@ -224,10 +243,15 @@ func (m model) View() tea.View {
 }
 
 func main() {
-	m := initialModel();
+	m, err := initialModel();
+	if err != nil {
+		log.Printf("required flag missing: %s", err)
+		flag.Usage()
+		os.Exit(2)
+	}
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
-		log.Printf("Fatal error: %v", err)
+		log.Printf("Program error: %v", err)
 		os.Exit(1)
 	}
 }
