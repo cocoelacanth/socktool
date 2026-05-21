@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -245,13 +244,13 @@ func (m model) View() tea.View {
 func main() {
 	m, err := initialModel();
 	if err != nil {
-		log.Printf("required flag missing: %s", err)
+		fmt.Fprintf(os.Stderr, "required flag missing: %v\n", err)
 		flag.Usage()
 		os.Exit(2)
 	}
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
-		log.Printf("Program error: %v", err)
+		fmt.Fprintf(os.Stderr, "Program error: %v", err)
 		os.Exit(1)
 	}
 }
