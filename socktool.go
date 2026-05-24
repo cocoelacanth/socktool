@@ -58,15 +58,6 @@ func tickCmd(d time.Duration, id int) tea.Cmd {
 	})
 }
 
-func getExeDir() (string, error) {
-	exePath, err := os.Executable()
-	if err != nil {
-		return "", err
-	}
-
-	return filepath.Dir(exePath), nil
-}
-
 func initialModel() (model, error) {
 	var m model
 
