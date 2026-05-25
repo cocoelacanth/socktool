@@ -27,15 +27,17 @@ go build -o ./bin .
 $ socktool -h
 ```
 ```
-Usage of socktool:
+Usage: socktool [flags] <json> <imgs>
+Required arguments:
+  json
+        the JSON file to parse
+  imgs
+        the location to search for image files
+Optional flags:
   -chars string
-    	a custom set of characters use in the ASCII art
+        a custom set of characters use in the ASCII art
   -color
-    	whether the ASCII art should have color
-  -imgs string
-    	(required) the location to search for image files
-  -json string
-    	(required) the JSON file containing images
+        enable colored ASCII art
 ```
 
   1. create a folder with all your images

@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -58,27 +57,40 @@ func tickCmd(d time.Duration, id int) tea.Cmd {
 	})
 }
 
-func initialModel() (model, error) {
+func usage() {
+	fmt.Fprintf(os.Stderr, "Usage: %s [flags] <json> <imgs>\n", os.Args[0])
+
+	fmt.Fprintln(os.Stderr, "Required arguments:")
+	fmt.Fprintln(os.Stderr, "  json")
+	fmt.Fprintln(os.Stderr, "\tthe JSON file to parse")
+	fmt.Fprintln(os.Stderr, "  imgs")
+	fmt.Fprintln(os.Stderr, "\tthe location to search for image files")
+
+	fmt.Fprintln(os.Stderr, "Optional flags:")
+	flag.PrintDefaults()
+}
+
+func initialModel() model {
 	var m model
 
-	flag.StringVar(&m.flags.jsonPath, "json", "", "(required) the JSON file containing images")
-	flag.StringVar(&m.flags.imgDir, "imgs", "", "(required) the location to search for image files")
-	flag.BoolVar(&m.flags.color, "color", false, "whether the ASCII art should have color")
+	flag.BoolVar(&m.flags.color, "color", false, "enable colored ASCII art")
 	flag.StringVar(&m.flags.charset, "chars", "", "a custom set of characters use in the ASCII art")
 
 	flag.Parse()
-	if m.flags.jsonPath == "" {
-		return m, errors.New("-json")
+
+	if flag.NArg() != 2 {
+		flag.Usage()
+		os.Exit(2)
 	}
-	if m.flags.imgDir == "" {
-		return m, errors.New("-imgs")
-	}
+
+	m.flags.jsonPath = flag.Arg(0)
+	m.flags.imgDir = flag.Arg(1)
 
 	if imgs, err := m.getImgs(); err == nil {
 		m.imgs = imgs
 	}
 
-	return m, nil
+	return m
 }
 
 func (m model) getImgs() (map[string]Image, error) {
@@ -233,15 +245,11 @@ func (m model) View() tea.View {
 }
 
 func main() {
-	m, err := initialModel();
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "required flag missing: %v\n", err)
-		flag.Usage()
-		os.Exit(2)
-	}
+	flag.Usage = usage
+	m := initialModel();
 	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "Program error: %v", err)
+		fmt.Fprintf(os.Stderr, "Program error: %v\n", err)
 		os.Exit(1)
 	}
 }
