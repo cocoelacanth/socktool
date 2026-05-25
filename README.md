@@ -2,7 +2,7 @@
 a tool to create keybinds for ascii art images
 
 ## requirements
-ensure you have go (>=1.26.3) installed. other than that, there are no external dependencies to install.
+ensure you have go (>=1.26) installed. other than that, there are no external dependencies to install.
 
 ## installing
 to install socktool as a binary to your `GOPATH`, run:
