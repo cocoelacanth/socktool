@@ -22,7 +22,7 @@ type cliFlags struct {
 	charset string
 }
 
-type Image struct {
+type image struct {
 	Frames []string
 	Delay *int
 	Loop *int
@@ -30,8 +30,8 @@ type Image struct {
 
 type model struct {
 	flags cliFlags
-	imgs map[string]Image
-	curImg *Image
+	imgs map[string]image
+	curImg *image
 	ascii string
 	frame int
 	width int
@@ -93,14 +93,14 @@ func initialModel() model {
 	return m
 }
 
-func (m model) getImgs() (map[string]Image, error) {
+func (m model) getImgs() (map[string]image, error) {
 	jsonFile, err := os.Open(m.flags.jsonPath)
 	if err != nil {
 		return nil, err
 	}
 	defer jsonFile.Close()
 
-	var imgs map[string]Image
+	var imgs map[string]image
 
 	decoder := json.NewDecoder(jsonFile)
 	if err := decoder.Decode(&imgs); err != nil {
