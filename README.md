@@ -1,28 +1,38 @@
 # socktool
 a tool to create keybinds for ascii art images
 
-## requirements
-ensure you have go (>=1.26) installed. other than that, there are no external dependencies to install.
+## getting socktool
+there are three main methods of obtaining socktool.
 
-## installing
-to install socktool as a binary to your `GOPATH`, run:
+### prebuilt releases
+prebuilt binaries for linux, macOS, and windows are available on the [releases page](https://github.com/cocoelacanth/socktool/releases).
+
+note that at the time of writing, the macOS and arm64 binaries are untested because i do not have a machine that can run them.
+
+### installing from source
+make sure that you have go (>=1.26) installed, then run:
 ```sh
 go install github.com/cocoelacanth/socktool@latest
 ```
+this will build the latest release of socktool and install it to your `GOPATH`.
 
-## building
-to build the socktool binary, run:
+### building from source
+make sure that you have go (>=1.26) installed.
+
+enter the source folder, then run:
 ```sh
-git clone https://github.com/cocoelacanth/socktool
-cd socktool
 mkdir -p bin
 go build -o ./bin .
 ```
+this will build socktool and place it in the bin/ folder.
 
 ## usage
-```sh
-$ socktool -h
-```
+1. create a folder with all your images
+2. create a json file with entries for each image/animation
+3. run socktool
+4. press a keybind to display an image!
+
+### command line
 ```
 Usage: socktool [flags] <json> <imgs>
 Required arguments:
@@ -36,13 +46,9 @@ Optional flags:
   -color
         enable colored ASCII art
 ```
+you can run `socktool -h` to see this information in your terminal.
 
-  1. create a folder with all your images
-  2. create a json file with entries for each image/animation
-  3. run socktool
-  4. press a keybind to display an image!
-
-### supported formats
+### supported image formats
 * .jpeg, .jpg
 * .png
 * .bmp
@@ -61,9 +67,9 @@ looping image sequences are supported, but animated gifs are not.
   },
   "w": {
     "frames": [
-      "bar/frame_1.png",
-      "bar/frame_2.png",
-      "bar/frame_3.png"
+      "bar_1.png",
+      "bar_2.png",
+      "bar_3.png"
     ],
     "delay": 100,
     "loop": 1000
