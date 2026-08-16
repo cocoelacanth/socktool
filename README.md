@@ -1,4 +1,10 @@
-# socktool
+```
+                _    _              _
+ ___  ___   ___| | _| |_ ___   ___ | |
+/ __|/ _ \ / __| |/ / __/ _ \ / _ \| |
+\__ \ (_) | (__|   <| || (_) | (_) | |
+|___/\___/ \___|_|\_\\__\___/ \___/|_|
+```
 a tool to create keybinds for ascii art images
 
 ## getting socktool
